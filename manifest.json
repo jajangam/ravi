@@ -1,0 +1,25 @@
+{
+  "name": "라비 砢馡",
+  "short_name": "라비",
+  "description": "금강반야바라밀경 독송 및 불교 콘텐츠 앱",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0F0A04",
+  "theme_color": "#0F0A04",
+  "orientation": "portrait",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
