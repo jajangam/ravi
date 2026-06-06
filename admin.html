@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>라비 관리자</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0F0A04;font-family:'Noto Sans KR',sans-serif;color:#F0DEB0;min-height:100vh}
+.wrap{max-width:700px;margin:0 auto;padding:30px 20px}
+.hdr{text-align:center;margin-bottom:30px;padding-bottom:20px;border-bottom:1px solid rgba(200,146,42,.3)}
+.logo{font-size:28px;color:#E8B84B;letter-spacing:4px;margin-bottom:6px}
+.sub{font-size:12px;color:#8A6840;letter-spacing:2px}
+
+/* 잠금 */
+#lockArea{display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px 0}
+.lock-inp{background:#2E1C0A;border:1px solid #7A5518;border-radius:10px;padding:14px;color:#F5D98A;font-size:24px;text-align:center;letter-spacing:10px;outline:none;width:200px}
+.lock-inp:focus{border-color:#C8922A}
+.lock-btn{padding:12px 40px;background:#7A5518;border:1px solid #C8922A;border-radius:10px;color:#F5D98A;font-size:15px;cursor:pointer}
+.lock-err{font-size:12px;color:#C84820;min-height:18px}
+#adminArea{display:none}
+
+.sec{background:#1A1005;border:1px solid rgba(200,146,42,.18);border-radius:14px;margin-bottom:16px;overflow:hidden}
+.sec-hd{padding:14px 18px;font-size:15px;color:#E8B84B;cursor:pointer;display:flex;justify-content:space-between;border-bottom:1px solid rgba(200,146,42,.15)}
+.sec-bd{padding:16px 18px}
+.field{margin-bottom:12px}
+.field label{font-size:11px;color:#8A6840;display:block;margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;background:#2E1C0A;border:1px solid rgba(200,146,42,.25);border-radius:8px;padding:10px 12px;color:#F0DEB0;font-size:13px;outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#C8922A}
+.field textarea{min-height:80px;resize:vertical}
+.row{display:flex;gap:10px}
+.row .field{flex:1}
+.add-btn{padding:10px 20px;background:#7A5518;border:1px solid #C8922A;border-radius:9px;color:#F5D98A;font-size:13px;cursor:pointer;margin-right:8px}
+.add-btn:hover{opacity:.85}
+.save-btn{padding:10px 20px;background:#2A6A5A;border:1px solid #4ABAAA;border-radius:9px;color:white;font-size:13px;cursor:pointer}
+.item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(200,146,42,.12)}
+.item:last-child{border-bottom:none}
+.item-txt{flex:1;font-size:13px;color:#C8A870}
+.del-btn{background:rgba(200,72,32,.2);border:1px solid rgba(200,72,32,.4);border-radius:6px;color:#C84820;font-size:12px;padding:4px 10px;cursor:pointer}
+.note{font-size:12px;color:#5A4020;padding:8px 0}
+.toast{position:fixed;top:20px;right:20px;background:#3A2510;border:1px solid #C8922A;color:#F5D98A;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div class="logo">🪷 라비 砢馡</div>
+    <div class="sub">관리자 페이지 · 오서 시안 전용</div>
+  </div>
+
+  <div id="lockArea">
+    <div style="font-size:30px">🔐</div>
+    <div style="font-size:14px;color:#8A6840">비밀번호를 입력하세요</div>
+    <input type="password" class="lock-inp" id="lInp" placeholder="••••" maxlength="6" onkeyup="if(event.key==='Enter')chkPw()">
+    <button class="lock-btn" onclick="chkPw()">입장</button>
+    <div class="lock-err" id="lErr"></div>
+  </div>
+
+  <div id="adminArea">
+
+    <!-- 1. 금강경 유튜브 -->
+    <div class="sec">
+      <div class="sec-hd" onclick="tog(this)">🎬 금강경 유튜브 <span>▾</span></div>
+      <div class="sec-bd" style="display:none">
+        <div class="row">
+          <div class="field"><label>영상 제목</label><input id="v1-tit" placeholder="예) 금강경 법문 1강"></div>
+          <div class="field"><label>유튜브 ID</label><input id="v1-id" placeholder="예) abc123XYZ"></div>
+          <div class="field" style="max-width:100px"><label>재생시간</label><input id="v1-dur" placeholder="28:45"></div>
+        </div>
+        <button class="add-btn" onclick="add('yt')">+ 추가</button>
+        <div id="list-yt" class="note">등록된 영상이 없어요</div>
+      </div>
+    </div>
+
+    <!-- 2. 명상 & 게송 -->
+    <div class="sec">
+      <div class="sec-hd" onclick="tog(this)">🧘 명상 & 게송 <span>▾</span></div>
+      <div class="sec-bd" style="display:none">
+        <div class="row">
+          <div class="field"><label>종류</label>
+            <select id="v2-type">
+              <option value="med">명상 영상 (유튜브)</option>
+              <option value="verse">오늘의 게송</option>
+              <option value="post">법문 글</option>
+            </select>
+          </div>
+          <div class="field"><label>제목</label><input id="v2-tit" placeholder="제목 입력"></div>
+        </div>
+        <div class="field"><label>내용 (텍스트)</label><textarea id="v2-body" placeholder="내용 입력"></textarea></div>
+        <div class="row">
+          <div class="field"><label>유튜브 ID (영상인 경우)</label><input id="v2-ytid" placeholder="예) abc123XYZ"></div>
+          <div class="field"><label>재생시간</label><input id="v2-dur" placeholder="예) 15:00"></div>
+        </div>
+        <button class="add-btn" onclick="add('board')">+ 추가</button>
+        <div id="list-board" class="note">등록된 내용이 없어요</div>
+      </div>
+    </div>
+
+    <!-- 3. 한생각 숏츠 -->
+    <div class="sec">
+      <div class="sec-hd" onclick="tog(this)">💭 한생각 숏츠 <span>▾</span></div>
+      <div class="sec-bd" style="display:none">
+        <div class="row">
+          <div class="field"><label>제목</label><input id="v3-tit" placeholder="예) 지금 이 순간"></div>
+          <div class="field"><label>유튜브 ID</label><input id="v3-id" placeholder="예) abc123XYZ"></div>
+          <div class="field" style="max-width:100px"><label>재생시간</label><input id="v3-dur" placeholder="0:58"></div>
+        </div>
+        <button class="add-btn" onclick="add('short')">+ 추가</button>
+        <div id="list-short" class="note">등록된 숏츠가 없어요</div>
+      </div>
+    </div>
+
+    <!-- 4. 한생각 게시판 -->
+    <div class="sec">
+      <div class="sec-hd" onclick="tog(this)">📝 한생각 게시판 <span>▾</span></div>
+      <div class="sec-bd" style="display:none">
+        <div class="field"><label>제목</label><input id="v4-tit" placeholder="제목 입력"></div>
+        <div class="field"><label>내용</label><textarea id="v4-body" placeholder="내용 입력"></textarea></div>
+        <button class="add-btn" onclick="add('post')">+ 추가</button>
+        <div id="list-post" class="note">등록된 글이 없어요</div>
+      </div>
+    </div>
+
+    <!-- 5. 더보기 소제목 -->
+    <div class="sec">
+      <div class="sec-hd" onclick="tog(this)">🌿 더보기 소제목 수정 <span>▾</span></div>
+      <div class="sec-bd" style="display:none">
+        <div class="row">
+          <div class="field"><label>카테고리</label>
+            <select id="v5-cat" onchange="loadCatName()">
+              <option value="0">1번 카테고리</option>
+              <option value="1">2번 카테고리</option>
+              <option value="2">3번 카테고리</option>
+              <option value="3">4번 카테고리</option>
+            </select>
+          </div>
+          <div class="field"><label>아이콘</label><input id="v5-icon" placeholder="🏯"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>제목</label><input id="v5-name" placeholder="사찰 탐방"></div>
+          <div class="field"><label>부제목</label><input id="v5-sub" placeholder="전국 사찰 소개"></div>
+        </div>
+        <button class="add-btn" onclick="saveCatName()">✓ 저장</button>
+      </div>
+    </div>
+
+    <!-- 6. 더보기 영상 -->
+    <div class="sec">
+      <div class="sec-hd" onclick="tog(this)">🌿 더보기 영상 추가 <span>▾</span></div>
+      <div class="sec-bd" style="display:none">
+        <div class="row">
+          <div class="field"><label>카테고리</label>
+            <select id="v6-cat">
+              <option value="0">1번 카테고리</option>
+              <option value="1">2번 카테고리</option>
+              <option value="2">3번 카테고리</option>
+              <option value="3">4번 카테고리</option>
+            </select>
+          </div>
+          <div class="field"><label>제목</label><input id="v6-tit" placeholder="영상 제목"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>유튜브 ID</label><input id="v6-id" placeholder="abc123XYZ"></div>
+          <div class="field"><label>설명</label><input id="v6-meta" placeholder="경남 양산 · 탐방 영상"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>직접 이미지 파일명 (선택)</label><input id="v6-img" placeholder="예) temple1.jpg"></div>
+          <div class="field" style="display:flex;align-items:flex-end;padding-bottom:1px">
+            <div style="font-size:11px;color:#8A6840">images/ 폴더에 파일 업로드 후<br>파일명만 입력하세요</div>
+          </div>
+        </div>
+        <button class="add-btn" onclick="add('more')">+ 추가</button>
+        <div id="list-more" class="note">등록된 영상이 없어요</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function chkPw(){
+  var pw=document.getElementById('lInp').value;
+  if(pw==='0000'){
+    document.getElementById('lockArea').style.display='none';
+    document.getElementById('adminArea').style.display='block';
+    render();loadCatName();
+  } else {
+    document.getElementById('lErr').textContent='비밀번호가 틀렸습니다';
+    document.getElementById('lInp').value='';
+  }
+}
+document.getElementById('lInp').addEventListener('keyup',function(e){if(e.key==='Enter')chkPw();});
+
+function tog(hd){
+  var bd=hd.nextElementSibling;
+  var on=bd.style.display==='block';
+  bd.style.display=on?'none':'block';
+  hd.querySelector('span').textContent=on?'▾':'▴';
+}
+
+function g(k){return JSON.parse(localStorage.getItem('rabi_'+k)||'[]');}
+function s(k,v){localStorage.setItem('rabi_'+k,JSON.stringify(v));}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(function(){t.classList.remove('on');},2500);}
+
+function add(type){
+  if(type==='yt'){
+    var t=document.getElementById('v1-tit').value.trim();
+    var id=document.getElementById('v1-id').value.trim();
+    var dur=document.getElementById('v1-dur').value.trim();
+    if(!t||!id){toast('제목과 ID를 입력하세요');return;}
+    var arr=g('yt');arr.push({title:t,id:id,dur:dur,sub:'방금 추가'});s('yt',arr);
+    document.getElementById('v1-tit').value='';document.getElementById('v1-id').value='';document.getElementById('v1-dur').value='';
+    render();toast('영상 추가! 🎬');
+  } else if(type==='board'){
+    var tp=document.getElementById('v2-type').value;
+    var t=document.getElementById('v2-tit').value.trim();
+    var b=document.getElementById('v2-body').value.trim();
+    var yi=document.getElementById('v2-ytid').value.trim();
+    var dur=document.getElementById('v2-dur').value.trim();
+    if(!t){toast('제목을 입력하세요');return;}
+    if(tp==='med'&&!yi){toast('명상 영상은 유튜브 ID가 필요해요');return;}
+    var arr=g('board');arr.unshift({type:tp,title:t,body:b,ytid:yi,dur:dur,date:new Date().toLocaleDateString('ko')});s('board',arr);
+    document.getElementById('v2-tit').value='';document.getElementById('v2-body').value='';document.getElementById('v2-ytid').value='';
+    render();toast('추가 완료! 🧘');
+  } else if(type==='short'){
+    var t=document.getElementById('v3-tit').value.trim();
+    var id=document.getElementById('v3-id').value.trim();
+    var dur=document.getElementById('v3-dur').value.trim();
+    if(!t||!id){toast('제목과 ID를 입력하세요');return;}
+    var arr=g('shorts');arr.push({title:t,id:id,dur:dur||'1:00'});s('shorts',arr);
+    document.getElementById('v3-tit').value='';document.getElementById('v3-id').value='';
+    render();toast('숏츠 추가! 💭');
+  } else if(type==='post'){
+    var t=document.getElementById('v4-tit').value.trim();
+    var b=document.getElementById('v4-body').value.trim();
+    if(!t){toast('제목을 입력하세요');return;}
+    var arr=g('posts');arr.unshift({title:t,body:b,date:new Date().toLocaleDateString('ko')});s('posts',arr);
+    document.getElementById('v4-tit').value='';document.getElementById('v4-body').value='';
+    render();toast('글 추가! ✍️');
+  } else if(type==='more'){
+    var cat=parseInt(document.getElementById('v6-cat').value);
+    var t=document.getElementById('v6-tit').value.trim();
+    var id=document.getElementById('v6-id').value.trim();
+    var meta=document.getElementById('v6-meta').value.trim();
+    if(!t||!id){toast('제목과 ID를 입력하세요');return;}
+    var img=document.getElementById('v6-img').value.trim();
+    var arr=g('more');while(arr.length<=cat)arr.push([]);
+    arr[cat].push({title:t,id:id,meta:meta,img:img});s('more',arr);
+    document.getElementById('v6-img').value='';
+    document.getElementById('v6-tit').value='';document.getElementById('v6-id').value='';
+    render();toast('추가 완료! 🌿');
+  }
+}
+
+function del(type,i){
+  var arr=g(type);arr.splice(i,1);s(type,arr);render();toast('삭제했어요');
+}
+function delMore(cat,i){
+  var arr=g('more');if(arr[cat])arr[cat].splice(i,1);s('more',arr);render();toast('삭제했어요');
+}
+
+var CAT_DEFAULT=[
+  {icon:'🏯',title:'사찰 탐방',sub:'전국 사찰 소개'},
+  {icon:'🎨',title:'문화예술인',sub:'사찰 주변 문화예술인'},
+  {icon:'🛒',title:'생활정보 & 쇼핑',sub:'먹거리 · 생활 · 서적'},
+  {icon:'✨',title:'그 외',sub:'기타 유익한 콘텐츠'}
+];
+function getCatNames(){return JSON.parse(localStorage.getItem('rabi_cat_names')||JSON.stringify(CAT_DEFAULT));}
+function loadCatName(){
+  var cat=parseInt(document.getElementById('v5-cat').value);
+  var names=getCatNames();
+  document.getElementById('v5-icon').value=names[cat].icon||'';
+  document.getElementById('v5-name').value=names[cat].title||'';
+  document.getElementById('v5-sub').value=names[cat].sub||'';
+}
+function saveCatName(){
+  var cat=parseInt(document.getElementById('v5-cat').value);
+  var names=getCatNames();
+  var ic=document.getElementById('v5-icon').value.trim();
+  var t=document.getElementById('v5-name').value.trim();
+  var sb=document.getElementById('v5-sub').value.trim();
+  if(ic) names[cat].icon=ic;
+  if(t) names[cat].title=t;
+  if(sb) names[cat].sub=sb;
+  localStorage.setItem('rabi_cat_names',JSON.stringify(names));
+  toast('소제목 저장! 🌿 앱에서 새로고침하면 반영돼요');
+}
+
+function render(){
+  var cats=['🏯','🎨','🛒','✨'];
+  var lists=[
+    {id:'list-yt',arr:g('yt'),type:'yt',icon:'🎬'},
+    {id:'list-board',arr:g('board'),type:'board',icon:'📝'},
+    {id:'list-short',arr:g('shorts'),type:'shorts',icon:'💭'},
+    {id:'list-post',arr:g('posts'),type:'posts',icon:'✍️'},
+  ];
+  lists.forEach(function(l){
+    var el=document.getElementById(l.id);if(!el)return;
+    el.innerHTML=l.arr.length
+      ?l.arr.map(function(v,i){
+          return '<div class="item"><div class="item-txt">'+l.icon+' '+v.title+'</div>'
+            +'<a href="https://www.youtube.com/watch?v='+(v.id||v.ytid||'')+'" target="_blank" style="font-size:11px;color:#4ABAAA;margin-right:8px;text-decoration:none">'+(v.id||v.ytid?'▶':'')+'</a>'
+            +'<button class="del-btn" onclick="del(\''+l.type+'\','+i+')">삭제</button></div>';
+        }).join('')
+      :'<div class="note">등록된 항목이 없어요</div>';
+  });
+  var mEl=document.getElementById('list-more');
+  if(mEl){
+    var more=g('more');var mh='';
+    more.forEach(function(arr,ci){
+      if(arr&&arr.length) arr.forEach(function(v,i){
+        mh+='<div class="item"><div class="item-txt">'+cats[ci]+' '+v.title+'</div>'
+          +'<a href="https://www.youtube.com/watch?v='+v.id+'" target="_blank" style="font-size:11px;color:#4ABAAA;margin-right:8px;text-decoration:none">▶</a>'
+          +'<button class="del-btn" onclick="delMore('+ci+','+i+')">삭제</button></div>';
+      });
+    });
+    mEl.innerHTML=mh||'<div class="note">등록된 영상이 없어요</div>';
+  }
+}
+</script>
+</body>
+</html>
