@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>라비 砢馡 — 앱 정보</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0F0A04; --bg2:#1A1005; --bg3:#241508; --bg4:#2E1C0A;
+  --gold:#C8922A; --gold2:#E8B84B; --gold3:#F5D98A; --gold4:#FFF0CC;
+  --golddim:#7A5518;
+  --text:#F0DEB0; --text2:#C8A870; --text3:#8A6840; --text4:#5A4020;
+  --border:rgba(200,146,42,0.18); --border2:rgba(200,146,42,0.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text);min-height:100%}
+body{max-width:480px;margin:0 auto;padding-bottom:40px}
+
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border2);padding:16px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+.back-btn{background:var(--golddim);border:1px solid var(--gold);border-radius:8px;color:var(--gold3);font-size:13px;padding:6px 14px;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:4px}
+.hdr-title{font-family:'Noto Serif KR',serif;font-size:16px;color:var(--gold2);letter-spacing:2px}
+
+.lotus{text-align:center;padding:32px 0 20px;font-size:48px}
+.app-name{text-align:center;font-family:'Noto Serif KR',serif;font-size:24px;font-weight:700;color:var(--gold2);letter-spacing:6px;margin-bottom:4px}
+.app-sub{text-align:center;font-size:11px;color:var(--text3);letter-spacing:3px;margin-bottom:32px}
+
+.section{margin:0 16px 20px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.sec-title{padding:13px 16px;font-size:13px;font-weight:500;color:var(--gold2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;letter-spacing:1px}
+.sec-body{padding:14px 16px;font-size:13px;color:var(--text2);line-height:1.9}
+.sec-body p{margin-bottom:8px}
+.sec-body p:last-child{margin-bottom:0}
+.sec-body strong{color:var(--gold3)}
+
+.band-btn{display:flex;align-items:center;justify-content:center;gap:10px;margin:16px;padding:14px;background:var(--golddim);border:1px solid var(--gold);border-radius:12px;color:var(--gold3);font-size:14px;font-weight:500;text-decoration:none;letter-spacing:1px;transition:opacity .2s}
+.band-btn:active{opacity:.7}
+.band-icon{font-size:20px}
+
+.info-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.info-row:last-child{border-bottom:none}
+.info-label{color:var(--text3);flex-shrink:0;margin-right:12px;min-width:80px}
+.info-value{color:var(--text2);text-align:right;word-break:keep-all}
+
+.footer{text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text4);line-height:2}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <a href="javascript:history.back()" class="back-btn">← 돌아가기</a>
+  <div class="hdr-title">앱 정보</div>
+</div>
+
+<div class="lotus">🪷</div>
+<div class="app-name">라비 砢馡</div>
+<div class="app-sub">금강반야바라밀경 독송 앱</div>
+
+<!-- 밴드 가입 -->
+<a href="https://band.us/band/103030407" target="_blank" class="band-btn">
+  <span class="band-icon">💬</span> 금강경독송 밴드 가입하기
+</a>
+
+<!-- 운영자 정보 -->
+<div class="section">
+  <div class="sec-title">📋 운영자 정보</div>
+  <div class="sec-body">
+    <div class="info-row">
+      <span class="info-label">운영·관리</span>
+      <span class="info-value">라비출판사<br>통도사 (언양 연화사)</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">공식 커뮤니티</span>
+      <span class="info-value"><a href="https://band.us/band/103030407" target="_blank" style="color:var(--gold2);text-decoration:underline;">밴드 「금강경독송」</a></span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">문의</span>
+      <span class="info-value">밴드를 통해 문의해 주세요</span>
+    </div>
+  </div>
+</div>
+
+<!-- 저작권 -->
+<div class="section">
+  <div class="sec-title">©️ 저작권 안내</div>
+  <div class="sec-body">
+    <p>본 앱에 수록된 <strong>금강반야바라밀경</strong> 한문 독음 및 한글 번역 텍스트의 저작권은 <strong>라비출판사</strong>에 있습니다.</p>
+    <p>앱 내 콘텐츠(텍스트·디자인·구성)를 무단으로 복제·배포·수정·상업적 이용하는 것을 금합니다.</p>
+    <p>경전 독송 및 개인 수행 목적의 사용은 자유롭게 허용됩니다.</p>
+  </div>
+</div>
+
+<!-- 개인정보 처리방침 -->
+<div class="section">
+  <div class="sec-title">🔒 개인정보 처리방침</div>
+  <div class="sec-body">
+    <p>본 앱은 <strong>별도의 회원가입 없이</strong> 이용할 수 있으며, 개인정보를 수집하지 않습니다.</p>
+    <p>독송 횟수 등 기록은 사용자 기기 내 로컬 저장소에만 저장되며, 외부 서버로 전송되지 않습니다.</p>
+    <p>게시판 콘텐츠는 관리자만 등록·수정·삭제할 수 있습니다.</p>
+  </div>
+</div>
+
+<!-- 면책조항 -->
+<div class="section">
+  <div class="sec-title">📌 이용 안내</div>
+  <div class="sec-body">
+    <p>본 앱은 <strong>불교 경전 독송 및 수행</strong>을 돕기 위한 목적으로 제작되었습니다.</p>
+    <p>수록된 경전 내용은 종교적·수행적 목적으로만 활용하시기 바랍니다.</p>
+    <p>앱 이용 중 불편사항은 밴드를 통해 문의해 주시면 성심껏 답변 드리겠습니다.</p>
+  </div>
+</div>
+
+<div class="footer">
+  오서 시안 합장 🙏<br>
+  © 라비출판사 · 통도사(언양 연화사)<br>
+  All rights reserved.
+</div>
+
+</body>
+</html>
