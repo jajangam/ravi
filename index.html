@@ -952,18 +952,10 @@ async function movePostUp(id, tab) {
   if(idx <= 0) { showToast('이미 맨 위예요!'); return; }
   const above = posts[idx-1];
   const current = posts[idx];
-  // 실제 sort_order 값이 같으면 인덱스로 강제 설정
-  const aOrder = above.sort_order !== null ? above.sort_order : idx-1;
-  const cOrder = current.sort_order !== null ? current.sort_order : idx;
-  if(aOrder === cOrder) {
-    // 전체 순서 재설정
-    const updates = posts.map((p,i) => updatePost_sb(p.id, {sort_order: i*10}));
-    await Promise.all(updates);
-    await updatePost_sb(current.id, {sort_order: (idx-1)*10 - 1});
-  } else {
-    await updatePost_sb(above.id, {sort_order: cOrder});
-    await updatePost_sb(current.id, {sort_order: aOrder});
-  }
+  const aboveOrder = above.sort_order;
+  const currentOrder = current.sort_order;
+  await updatePost_sb(above.id, {sort_order: currentOrder});
+  await updatePost_sb(current.id, {sort_order: aboveOrder});
   await renderBoard(tab);
   await renderAdminPostList(tab);
   showToast('한 칸 위로 이동했습니다 ↑');
