@@ -256,6 +256,22 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .edit-cancel-btn{padding:12px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text3);font-size:13px;cursor:pointer}
 .adm-pw-row{display:flex;gap:8px;align-items:flex-end}
 .adm-pw-btn{padding:9px 14px;background:var(--golddim);border:1px solid var(--gold);border-radius:8px;color:var(--gold3);font-size:12px;cursor:pointer;white-space:nowrap}
+
+/* 관리자 패널 스크롤 */
+.adm-body{scrollbar-width:thin;scrollbar-color:var(--golddim) var(--bg2)}
+.adm-body::-webkit-scrollbar{width:5px}
+.adm-body::-webkit-scrollbar-thumb{background:var(--golddim);border-radius:3px}
+.adm-body::-webkit-scrollbar-track{background:var(--bg2)}
+
+/* 관리자 맨위로 버튼 */
+.adm-scroll-top{position:fixed;bottom:20px;right:16px;width:42px;height:42px;background:var(--golddim);border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--gold3);cursor:pointer;z-index:3100;box-shadow:0 2px 12px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .25s}
+.adm-scroll-top.show{opacity:1;pointer-events:auto}
+
+/* 순번 뱃지 */
+.adm-item-rank{flex-shrink:0;width:18px;height:18px;background:var(--bg4);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3);font-weight:500}
+
+/* ⬆ 맨위 항목 비활성화 */
+.adm-up-btn:disabled{opacity:.3;cursor:not-allowed;pointer-events:none}
 </style>
 </head>
 <body>
@@ -501,7 +517,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <div class="adm-title">⚙ 관리자</div>
     <div style="width:80px"></div>
   </div>
-  <div class="adm-body">
+  <div class="adm-body" id="admBody">
 
     <!-- 비밀번호 변경 -->
     <div class="adm-section">
@@ -572,6 +588,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <a href="./privacy.html" style="display:block;text-align:center;font-size:11px;color:var(--text4);padding-bottom:8px;text-decoration:underline">개인정보처리방침</a>
     <button onclick="closeAdmin()" style="width:100%;padding:14px;background:var(--golddim);border:1px solid var(--gold);border-radius:12px;color:var(--gold3);font-size:14px;cursor:pointer;margin-bottom:20px;letter-spacing:1px">← 메인으로 돌아가기</button>
   </div>
+  <!-- 관리자 패널 맨위로 버튼 -->
+  <button class="adm-scroll-top" id="admScrollTop" onclick="admScrollToTop()" title="맨 위로">↑</button>
 </div>
 
 <script>
@@ -948,12 +966,17 @@ function togglePostYt(thumbEl, ytid) {
 // 한 칸씩 위로
 async function movePostUp(id, tab) {
   const posts = await loadPosts(tab);
-  const idx = posts.findIndex(p => p.id === id);
+  // sort_order 오름차순 정렬 (낮을수록 위)
+  const sorted = posts.slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  const idx = sorted.findIndex(p => p.id === id);
   if(idx <= 0) { showToast('이미 맨 위예요!'); return; }
-  // 위 게시물의 created_at 시간보다 1초 더 최신으로 설정
-  const aboveTime = new Date(posts[idx-1].created_at);
-  aboveTime.setSeconds(aboveTime.getSeconds() + 1);
-  await updatePost_sb(id, {created_at: aboveTime.toISOString()});
+  const cur = sorted[idx];
+  const above = sorted[idx-1];
+  // sort_order 서로 교환
+  const curOrder = cur.sort_order ?? idx;
+  const aboveOrder = above.sort_order ?? (idx-1);
+  await updatePost_sb(cur.id, {sort_order: aboveOrder});
+  await updatePost_sb(above.id, {sort_order: curOrder});
   await renderBoard(tab);
   await renderAdminPostList(tab);
   showToast('한 칸 위로 이동했습니다 ↑');
@@ -1188,6 +1211,20 @@ function closeAdmin(){
   [1,2,3,4,5].forEach(i=>renderBoard(i));
   document.getElementById('adminPanel').style.display='none';
 }
+
+// 관리자 패널 맨위로
+function admScrollToTop() {
+  const body = document.getElementById('admBody');
+  if(body) body.scrollTop = 0;
+}
+function setupAdmScrollTop() {
+  const body = document.getElementById('admBody');
+  const btn = document.getElementById('admScrollTop');
+  if(!body||!btn) return;
+  body.addEventListener('scroll', () => {
+    btn.classList.toggle('show', body.scrollTop > 60);
+  });
+}
 function toggleAdmSec(el){
   const body = el.parentElement.querySelector('.adm-sec-body');
   if(!body) return;
@@ -1288,10 +1325,13 @@ async function renderAdminPostList(tab) {
     el.innerHTML = '<div style="padding:10px 0;font-size:12px;color:var(--text4)">등록된 게시물이 없습니다.</div>';
     return;
   }
-  el.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-bottom:8px;letter-spacing:1px">📋 등록된 게시물 (최신순)</div>' +
-    posts.slice().reverse().map((p,i) => `<div class="adm-item">
+  // sort_order 오름차순 (낮을수록 상단 노출)
+  const sorted = posts.slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  el.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-bottom:8px;letter-spacing:1px">📋 등록된 게시물 (표시 순서)</div>' +
+    sorted.map((p,i) => `<div class="adm-item">
+      <div class="adm-item-rank">${i+1}</div>
       <div class="adm-item-text">${p.title}</div>
-      <button class="adm-edit-btn" onclick="movePostUp(${p.id},${tab})" title="한칸위로">⬆</button>
+      <button class="adm-edit-btn adm-up-btn" onclick="movePostUp(${p.id},${tab})" title="한칸위로" ${i===0?'disabled':''}>⬆</button>
       <button class="adm-edit-btn" onclick="openEditModal(${p.id},${tab})">수정</button>
       <button class="adm-del-btn" onclick="deletePost(${p.id},${tab})">삭제</button>
     </div>`).join('');
@@ -1366,6 +1406,7 @@ document.addEventListener('copy', e => {
 });
 buildSutra();
 setupSutraScrollTop();
+setupAdmScrollTop();
 [1,2,3,4,5].forEach(i=>{ renderBoard(i); setupScrollTop('p'+i,'st'+i); });
 setTimeout(()=>document.getElementById('splash').classList.add('hide'),2300);
 
