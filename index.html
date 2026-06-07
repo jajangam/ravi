@@ -115,6 +115,25 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .btn-sm{width:42px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text3);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
 .btn-sm:active{border-color:var(--gold);color:var(--gold2)}
 
+/* 목록형 카드 */
+.post-card-row{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer}
+.post-card-row:active{background:var(--bg3)}
+.card-thumb-wrap{flex-shrink:0;width:72px;height:72px;border-radius:8px;overflow:hidden;background:var(--bg3)}
+.card-thumb{width:72px;height:72px;object-fit:cover;display:block}
+.card-text-wrap{flex:1;min-width:0}
+.post-body-preview{font-size:12px;color:var(--text3);margin-top:3px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+
+/* 전체보기 모달 */
+#fullPostModal{position:fixed;inset:0;z-index:600;background:var(--bg);display:none;flex-direction:column}
+#fullPostModal.show{display:flex}
+.fp-hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.fp-close{background:none;border:1px solid var(--border);border-radius:8px;color:var(--text3);font-size:13px;padding:5px 12px;cursor:pointer}
+.fp-body{flex:1;overflow-y:auto;padding:14px}
+.fp-tag-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.fp-title{font-size:16px;font-weight:500;color:var(--text);margin-bottom:10px;line-height:1.5}
+.fp-text{font-size:14px;color:var(--text2);line-height:1.9;white-space:pre-wrap;margin-top:10px}
+.fp-embed{display:none}.fp-embed.show{display:block}
+
 /* ━━━━ 공통 게시판 ━━━━ */
 .page-title-bar{padding:14px 14px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .page-title{font-family:'Noto Serif KR',serif;font-size:16px;color:var(--gold2);letter-spacing:2px}
@@ -411,6 +430,22 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- ━━━ 전체보기 모달 ━━━ -->
+<div id="fullPostModal">
+  <div class="fp-hdr">
+    <div class="fp-tag-row">
+      <span class="post-tag" id="fp-tag"></span>
+      <span class="post-date" id="fp-date"></span>
+    </div>
+    <button class="fp-close" onclick="closeFullPost()">✕ 닫기</button>
+  </div>
+  <div class="fp-body">
+    <div class="fp-title" id="fp-title"></div>
+    <div id="fp-media"></div>
+    <div class="fp-text" id="fp-body"></div>
+  </div>
+</div>
 
 <!-- ━━━ 게시물 수정 모달 ━━━ -->
 <div id="editModal" onclick="closeEditModal(event)">
@@ -794,37 +829,89 @@ async function renderBoard(tab) {
 function buildCard(p, idx, tab) {
   const isAdmin = window._adminOpen || false;
   const pid = p.id;
-  let media = '';
-  if(p.ytid) {
-    const thumb = `https://img.youtube.com/vi/${p.ytid}/mqdefault.jpg`;
-    media = `<div class="post-yt-thumb" onclick="togglePostYt(this,'${p.ytid}')">
-      <img src="${thumb}" alt="유튜브 썸네일" loading="lazy" onerror="this.style.background='var(--bg3)';this.style.height='120px'">
-      <div class="yt-overlay"><div class="yt-play-ico">▶</div></div>
-    </div>
-    <div class="post-yt-embed" id="pyte-${tab}-${pid}">
-      <iframe src="" data-src="https://www.youtube.com/embed/${p.ytid}?autoplay=1" frameborder="0" allowfullscreen></iframe>
-    </div>
-    <a class="yt-open-link" href="https://www.youtube.com/watch?v=${p.ytid}" target="_blank">🔗 유튜브에서 보기</a>`;
-  } else if(p.imgurl) {
-    media = `<img class="post-img" src="${p.imgurl}" alt="이미지" loading="lazy">`;
-  }
   const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString('ko-KR') : (p.date||'');
-  const bodyText = p.body ? `<div class="post-body-text collapsed" id="pbody-${tab}-${pid}">${escHtml(p.body)}</div>
-    <span class="more-btn" id="pmore-${tab}-${pid}" onclick="toggleBodyById('${tab}-${pid}')">더보기 ▼</span>` : '';
+
+  // 썸네일 (작게 왼쪽)
+  let thumb = '';
+  if(p.ytid) {
+    thumb = `<img class="card-thumb" src="https://img.youtube.com/vi/${p.ytid}/mqdefault.jpg" alt="썸네일" loading="lazy" onclick="openFullPost(${pid},${tab})">`;
+  } else if(p.imgurl) {
+    thumb = `<img class="card-thumb" src="${p.imgurl}" alt="이미지" loading="lazy" onclick="openFullPost(${pid},${tab})">`;
+  }
+
+  // 관리자 버튼
   const actions = isAdmin ? `<div class="post-actions">
     <button class="post-act-btn" onclick="movePostTop(${pid},${tab})">⬆ 맨위로</button>
     <button class="post-act-btn" onclick="openEditModal(${pid},${tab})">✏️ 수정</button>
     <button class="post-act-btn del" onclick="deletePost(${pid},${tab})">🗑 삭제</button>
   </div>` : '';
+
   return `<div class="post-card" id="pcard-${tab}-${pid}">
-    <div class="post-card-header">
-      <div class="post-tag-row"><span class="post-tag">${escHtml(p.tag||'게시글')}</span><span class="post-date">${dateStr}</span></div>
-      <div class="post-title">${escHtml(p.title)}</div>
-      ${bodyText}
+    <div class="post-card-row" onclick="openFullPost(${pid},${tab})">
+      ${thumb ? `<div class="card-thumb-wrap">${thumb}</div>` : ''}
+      <div class="card-text-wrap">
+        <div class="post-tag-row"><span class="post-tag">${escHtml(p.tag||'게시글')}</span><span class="post-date">${dateStr}</span></div>
+        <div class="post-title">${escHtml(p.title)}</div>
+        ${p.body ? `<div class="post-body-preview">${escHtml(p.body.substring(0,60))}${p.body.length>60?'...':''}</div>` : ''}
+      </div>
     </div>
-    ${media}
     ${actions}
   </div>`;
+}
+
+// 전체보기 모달
+function openFullPost(id, tab) {
+  // 현재 탭 게시물에서 찾기
+  const card = document.getElementById('pcard-'+tab+'-'+id);
+  if(!card) return;
+  // 풀포스트 모달 열기
+  const modal = document.getElementById('fullPostModal');
+  const title = card.querySelector('.post-title')?.textContent || '';
+  const body = card.querySelector('.post-body-preview')?.textContent || '';
+  const thumb = card.querySelector('.card-thumb');
+  const date = card.querySelector('.post-date')?.textContent || '';
+  const tag = card.querySelector('.post-tag')?.textContent || '';
+
+  document.getElementById('fp-tag').textContent = tag;
+  document.getElementById('fp-date').textContent = date;
+  document.getElementById('fp-title').textContent = title;
+  document.getElementById('fp-body').textContent = body;
+
+  // 미디어
+  const mediaEl = document.getElementById('fp-media');
+  mediaEl.innerHTML = '';
+  if(thumb) {
+    const src = thumb.src;
+    // 유튜브인지 확인
+    const ytMatch = src.match(/vi\/([^/]+)\//);
+    if(ytMatch) {
+      mediaEl.innerHTML = `
+        <div class="post-yt-thumb" onclick="toggleFpYt(this,'${ytMatch[1]}')">
+          <img src="${src}" style="width:100%;display:block;aspect-ratio:16/9;object-fit:cover">
+          <div class="yt-overlay"><div class="yt-play-ico">▶</div></div>
+        </div>
+        <div class="fp-yt-embed" id="fp-embed">
+          <iframe src="" data-src="https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1" frameborder="0" allowfullscreen style="width:100%;height:200px;border:none;display:block"></iframe>
+        </div>
+        <a class="yt-open-link" href="https://www.youtube.com/watch?v=${ytMatch[1]}" target="_blank">🔗 유튜브에서 보기</a>`;
+    } else {
+      mediaEl.innerHTML = `<img src="${src}" style="width:100%;display:block;max-height:320px;object-fit:contain">`;
+    }
+  }
+  modal.classList.add('show');
+}
+function toggleFpYt(el, ytid) {
+  const embed = document.getElementById('fp-embed');
+  const show = !embed.classList.contains('show');
+  embed.classList.toggle('show', show);
+  const ifr = embed.querySelector('iframe');
+  if(show){ ifr.src = ifr.dataset.src; el.style.display='none'; }
+  else { ifr.src=''; el.style.display=''; }
+}
+function closeFullPost() {
+  document.getElementById('fullPostModal').classList.remove('show');
+  const ifr = document.querySelector('#fp-embed iframe');
+  if(ifr) ifr.src='';
 }
 
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -1178,6 +1265,7 @@ async function renderAdminPostList(tab) {
   el.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-bottom:8px;letter-spacing:1px">📋 등록된 게시물</div>' +
     posts.map((p,i) => `<div class="adm-item">
       <div class="adm-item-text">${p.title}</div>
+      <button class="adm-edit-btn" onclick="movePostTop(${p.id},${tab})" title="상단으로">⬆</button>
       <button class="adm-edit-btn" onclick="openEditModal(${p.id},${tab})">수정</button>
       <button class="adm-del-btn" onclick="deletePost(${p.id},${tab})">삭제</button>
     </div>`).join('');
