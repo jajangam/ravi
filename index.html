@@ -589,14 +589,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     </div>
   </div>
 
-  <!-- 맨위로 버튼 -->
-  <button id="admScrollTop" onclick="admScrollToTop()"
-    style="display:none;position:absolute;bottom:24px;right:16px;width:48px;height:48px;
-           background:var(--gold);border:2px solid var(--gold3);border-radius:50%;
-           font-size:22px;font-weight:700;color:var(--bg);cursor:pointer;
-           z-index:3200;box-shadow:0 4px 18px rgba(0,0,0,.7);
-           align-items:center;justify-content:center;">↑</button>
+  <!-- 관리자 패널 맨위로 버튼 (adminPanel 밖에 위치해야 fixed 작동) -->
 </div>
+<button id="admScrollTop" onclick="admScrollToTop()"
+  style="display:none;position:fixed;bottom:24px;right:20px;width:48px;height:48px;
+         background:var(--gold);border:2px solid var(--gold3);border-radius:50%;
+         font-size:22px;font-weight:700;color:var(--bg);cursor:pointer;
+         z-index:9999;box-shadow:0 4px 18px rgba(0,0,0,.7);
+         align-items:center;justify-content:center;">↑</button>
 
 <script>
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
