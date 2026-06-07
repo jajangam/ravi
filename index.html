@@ -260,10 +260,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .adm-pw-row{display:flex;gap:8px;align-items:flex-end}
 .adm-pw-btn{padding:9px 14px;background:var(--golddim);border:1px solid var(--gold);border-radius:8px;color:var(--gold3);font-size:12px;cursor:pointer;white-space:nowrap}
 
-/* 관리자 맨위로 버튼 */
-.adm-scroll-top{position:fixed;bottom:28px;right:20px;width:46px;height:46px;background:var(--gold);border:2px solid var(--gold3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--bg);cursor:pointer;z-index:3200;box-shadow:0 3px 16px rgba(0,0,0,.7);opacity:0;pointer-events:none;transition:opacity .3s;font-weight:700}
-.adm-scroll-top.show{opacity:1;pointer-events:auto}
-
 /* 순번 뱃지 */
 .adm-item-rank{flex-shrink:0;width:18px;height:18px;background:var(--bg4);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3);font-weight:500}
 
@@ -514,79 +510,92 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <div class="adm-title">⚙ 관리자</div>
     <div style="width:80px"></div>
   </div>
-  <div class="adm-body" id="admBody">
 
-    <!-- 비밀번호 변경 -->
-    <div class="adm-section">
-      <div class="adm-sec-title" onclick="toggleAdmSec(this)">🔑 비밀번호 변경 <span>▾</span></div>
-      <div class="adm-sec-body">
-        <div class="adm-field">
-          <label class="adm-label">현재 비밀번호</label>
-          <input class="adm-input" id="pw-cur" type="password" placeholder="현재 비밀번호">
-        </div>
-        <div class="adm-field">
-          <label class="adm-label">새 비밀번호</label>
-          <input class="adm-input" id="pw-new" type="password" placeholder="새 비밀번호">
-        </div>
-        <div class="adm-field">
-          <label class="adm-label">새 비밀번호 확인</label>
-          <input class="adm-input" id="pw-new2" type="password" placeholder="새 비밀번호 다시 입력">
-        </div>
-        <button class="adm-add-btn" onclick="changePw()">🔑 비밀번호 변경</button>
-      </div>
-    </div>
+  <!-- 스크롤 영역 래퍼 -->
+  <div id="admWrap" style="flex:1;position:relative;overflow:hidden;display:flex;">
+    <div class="adm-body" id="admBody">
 
-    <!-- 게시물 등록 -->
-    <div class="adm-section">
-      <div class="adm-sec-title" onclick="toggleAdmSec(this)">✏️ 새 게시물 등록 <span>▾</span></div>
-      <div class="adm-sec-body open">
-        <div class="adm-field">
-          <label class="adm-label">게시판 선택</label>
-          <div class="adm-tab-sel">
-            <button class="adm-tab-opt sel" data-board="1" onclick="selBoard(this)">경전이야기</button>
-            <button class="adm-tab-opt" data-board="2" onclick="selBoard(this)">오늘의명상</button>
-            <button class="adm-tab-opt" data-board="3" onclick="selBoard(this)">일일게송</button>
-            <button class="adm-tab-opt" data-board="4" onclick="selBoard(this)">생활정보</button>
-            <button class="adm-tab-opt" data-board="5" onclick="selBoard(this)">라비출판사</button>
+      <!-- 비밀번호 변경 -->
+      <div class="adm-section">
+        <div class="adm-sec-title" onclick="toggleAdmSec(this)">🔑 비밀번호 변경 <span>▾</span></div>
+        <div class="adm-sec-body">
+          <div class="adm-field">
+            <label class="adm-label">현재 비밀번호</label>
+            <input class="adm-input" id="pw-cur" type="password" placeholder="현재 비밀번호">
           </div>
-        </div>
-        <div class="adm-field">
-          <label class="adm-label">제목</label>
-          <input class="adm-input" id="post-title" placeholder="게시물 제목">
-        </div>
-        <div class="adm-field">
-          <label class="adm-label">내용 (선택)</label>
-          <textarea class="adm-textarea" id="post-body" placeholder="내용을 입력하세요"></textarea>
-        </div>
-        <div class="adm-field">
-          <label class="adm-label">유튜브 링크 또는 영상 ID (썸네일 자동 표시)</label>
-          <input class="adm-input" id="post-ytid" placeholder="유튜브 링크 전체 또는 ID 붙여넣기" oninput="extractYtId(this)">
-          <div id="yt-preview" style="margin-top:8px;display:none">
-            <img id="yt-preview-img" src="" style="width:100%;border-radius:8px;border:1px solid var(--border)" alt="썸네일 미리보기">
+          <div class="adm-field">
+            <label class="adm-label">새 비밀번호</label>
+            <input class="adm-input" id="pw-new" type="password" placeholder="새 비밀번호">
           </div>
+          <div class="adm-field">
+            <label class="adm-label">새 비밀번호 확인</label>
+            <input class="adm-input" id="pw-new2" type="password" placeholder="새 비밀번호 다시 입력">
+          </div>
+          <button class="adm-add-btn" onclick="changePw()">🔑 비밀번호 변경</button>
         </div>
-        <div class="adm-field">
-          <label class="adm-label">이미지 URL (선택)</label>
-          <input class="adm-input" id="post-imgurl" placeholder="https://... 이미지 주소">
-        </div>
-        <div class="adm-field">
-          <label class="adm-label">이미지 파일 직접 올리기 (선택)</label>
-          <input type="file" accept="image/*" id="post-imgfile" style="color:var(--text2);font-size:12px;width:100%">
-        </div>
-        <button class="adm-add-btn" onclick="submitPost()">+ 게시물 등록</button>
-        <!-- 등록된 게시물 목록 -->
-        <div id="adm-post-list" style="margin-top:14px"></div>
       </div>
+
+      <!-- 게시물 등록 -->
+      <div class="adm-section">
+        <div class="adm-sec-title" onclick="toggleAdmSec(this)">✏️ 새 게시물 등록 <span>▾</span></div>
+        <div class="adm-sec-body open">
+          <div class="adm-field">
+            <label class="adm-label">게시판 선택</label>
+            <div class="adm-tab-sel">
+              <button class="adm-tab-opt sel" data-board="1" onclick="selBoard(this)">경전이야기</button>
+              <button class="adm-tab-opt" data-board="2" onclick="selBoard(this)">오늘의명상</button>
+              <button class="adm-tab-opt" data-board="3" onclick="selBoard(this)">일일게송</button>
+              <button class="adm-tab-opt" data-board="4" onclick="selBoard(this)">생활정보</button>
+              <button class="adm-tab-opt" data-board="5" onclick="selBoard(this)">라비출판사</button>
+            </div>
+          </div>
+          <div class="adm-field">
+            <label class="adm-label">제목</label>
+            <input class="adm-input" id="post-title" placeholder="게시물 제목">
+          </div>
+          <div class="adm-field">
+            <label class="adm-label">내용 (선택)</label>
+            <textarea class="adm-textarea" id="post-body" placeholder="내용을 입력하세요"></textarea>
+          </div>
+          <div class="adm-field">
+            <label class="adm-label">유튜브 링크 또는 영상 ID (썸네일 자동 표시)</label>
+            <input class="adm-input" id="post-ytid" placeholder="유튜브 링크 전체 또는 ID 붙여넣기" oninput="extractYtId(this)">
+            <div id="yt-preview" style="margin-top:8px;display:none">
+              <img id="yt-preview-img" src="" style="width:100%;border-radius:8px;border:1px solid var(--border)" alt="썸네일 미리보기">
+            </div>
+          </div>
+          <div class="adm-field">
+            <label class="adm-label">이미지 URL (선택)</label>
+            <input class="adm-input" id="post-imgurl" placeholder="https://... 이미지 주소">
+          </div>
+          <div class="adm-field">
+            <label class="adm-label">이미지 파일 직접 올리기 (선택)</label>
+            <input type="file" accept="image/*" id="post-imgfile" style="color:var(--text2);font-size:12px;width:100%">
+          </div>
+          <button class="adm-add-btn" onclick="submitPost()">+ 게시물 등록</button>
+          <!-- 등록된 게시물 목록 -->
+          <div id="adm-post-list" style="margin-top:14px"></div>
+        </div>
+      </div>
+
+      <div style="text-align:center;padding:20px 0 10px;font-size:11px;color:var(--text4)">오서 시안 합장 🪷</div>
+      <a href="./privacy.html" style="display:block;text-align:center;font-size:11px;color:var(--text4);padding-bottom:8px;text-decoration:underline">개인정보처리방침</a>
+      <button onclick="closeAdmin()" style="width:100%;padding:14px;background:var(--golddim);border:1px solid var(--gold);border-radius:12px;color:var(--gold3);font-size:14px;cursor:pointer;margin-bottom:80px;letter-spacing:1px">← 메인으로 돌아가기</button>
     </div>
 
-    <div style="text-align:center;padding:20px 0 10px;font-size:11px;color:var(--text4)">
-      오서 시안 합장 🪷
+    <!-- 커스텀 스크롤바 트랙 -->
+    <div id="admScrollTrack" style="position:absolute;top:4px;right:3px;width:5px;bottom:4px;background:var(--bg3);border-radius:3px;opacity:0;transition:opacity .3s;pointer-events:none;">
+      <div id="admScrollThumb" style="position:absolute;width:100%;background:var(--golddim);border-radius:3px;min-height:30px;top:0;transition:background .2s;"></div>
     </div>
-    <a href="./privacy.html" style="display:block;text-align:center;font-size:11px;color:var(--text4);padding-bottom:8px;text-decoration:underline">개인정보처리방침</a>
-    <button onclick="closeAdmin()" style="width:100%;padding:14px;background:var(--golddim);border:1px solid var(--gold);border-radius:12px;color:var(--gold3);font-size:14px;cursor:pointer;margin-bottom:20px;letter-spacing:1px">← 메인으로 돌아가기</button>
   </div>
-  <!-- 관리자 패널 맨위로 버튼 -->
-  <button class="adm-scroll-top" id="admScrollTop" onclick="admScrollToTop()" title="맨 위로">↑</button>
+
+  <!-- 맨위로 버튼 -->
+  <button id="admScrollTop" onclick="admScrollToTop()"
+    style="display:none;position:absolute;bottom:24px;right:16px;width:48px;height:48px;
+           background:var(--gold);border:2px solid var(--gold3);border-radius:50%;
+           font-size:22px;font-weight:700;color:var(--bg);cursor:pointer;
+           z-index:3200;box-shadow:0 4px 18px rgba(0,0,0,.7);
+           align-items:center;justify-content:center;">↑</button>
 </div>
 
 <script>
@@ -1206,12 +1215,13 @@ function openAdmin(){
   document.querySelectorAll('.adm-sec-body').forEach(b => b.classList.remove('open'));
   const first = panel.querySelector('.adm-sec-body');
   if(first) first.classList.add('open');
-  // 게시판 탭 초기화 — 경전이야기 선택
   document.querySelectorAll('[data-board]').forEach(b=>b.classList.remove('sel'));
   const firstBoard = document.querySelector('[data-board="1"]');
   if(firstBoard) firstBoard.classList.add('sel');
   renderAdminPostList(1);
-  // 패널이 열린 후 스크롤 이벤트 연결
+  // 커스텀 스크롤바 초기화
+  const body = document.getElementById('admBody');
+  if(body) { body._scrollBound = false; body.scrollTop = 0; }
   setupAdmScrollTop();
 }
 function closeAdmin(){
@@ -1219,23 +1229,55 @@ function closeAdmin(){
   [1,2,3,4,5].forEach(i=>renderBoard(i));
   document.getElementById('adminPanel').style.display='none';
   const btn = document.getElementById('admScrollTop');
-  if(btn) btn.classList.remove('show');
+  if(btn) btn.style.display='none';
+  const track = document.getElementById('admScrollTrack');
+  if(track) track.style.opacity='0';
 }
 
-// 관리자 패널 맨위로
+// 관리자 패널 맨위로 + 커스텀 스크롤바
 function admScrollToTop() {
   const body = document.getElementById('admBody');
   if(body) body.scrollTo({top:0, behavior:'smooth'});
 }
+
 function setupAdmScrollTop() {
-  const body = document.getElementById('admBody');
-  const btn = document.getElementById('admScrollTop');
-  if(!body||!btn) return;
-  if(body._scrollBound) return; // 중복 방지
+  const body   = document.getElementById('admBody');
+  const btn    = document.getElementById('admScrollTop');
+  const track  = document.getElementById('admScrollTrack');
+  const thumb  = document.getElementById('admScrollThumb');
+  if(!body) return;
+  if(body._scrollBound) return;
   body._scrollBound = true;
-  body.addEventListener('scroll', () => {
-    btn.classList.toggle('show', body.scrollTop > 80);
-  });
+
+  function updateUI() {
+    const scrollTop    = body.scrollTop;
+    const scrollHeight = body.scrollHeight;
+    const clientHeight = body.clientHeight;
+    const canScroll    = scrollHeight > clientHeight + 10;
+
+    // 맨위로 버튼
+    if(btn) btn.style.display = (scrollTop > 80) ? 'flex' : 'none';
+
+    // 커스텀 스크롤바
+    if(track && thumb && canScroll) {
+      track.style.opacity = '1';
+      const trackH = clientHeight - 8;
+      const thumbH = Math.max(36, trackH * (clientHeight / scrollHeight));
+      const thumbTop = (scrollTop / (scrollHeight - clientHeight)) * (trackH - thumbH);
+      thumb.style.height = thumbH + 'px';
+      thumb.style.top    = thumbTop + 'px';
+    } else if(track) {
+      track.style.opacity = '0';
+    }
+  }
+
+  body.addEventListener('scroll', updateUI, {passive:true});
+  // 내용이 바뀔 때도 갱신
+  if(window.ResizeObserver) {
+    new ResizeObserver(updateUI).observe(body);
+  }
+  // 패널 열릴 때 초기 갱신
+  setTimeout(updateUI, 100);
 }
 function toggleAdmSec(el){
   const body = el.parentElement.querySelector('.adm-sec-body');
