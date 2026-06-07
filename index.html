@@ -758,7 +758,7 @@ async function sbFetch(path, options={}) {
 
 // 게시물 불러오기
 async function loadPosts(tab) {
-  const data = await sbFetch(`posts?tab=eq.${tab}&order=sort_order.desc,created_at.desc`);
+  const data = await sbFetch(`posts?tab=eq.${tab}&order=created_at.desc`);
   return data || [];
 }
 
@@ -950,13 +950,10 @@ async function movePostUp(id, tab) {
   const posts = await loadPosts(tab);
   const idx = posts.findIndex(p => p.id === id);
   if(idx <= 0) { showToast('이미 맨 위예요!'); return; }
-  const above = posts[idx-1];
-  const current = posts[idx];
-  // sort_order.desc = 숫자 클수록 위
-  const aboveOrder = above.sort_order;
-  const currentOrder = current.sort_order;
-  await updatePost_sb(above.id, {sort_order: currentOrder});
-  await updatePost_sb(current.id, {sort_order: aboveOrder + 1});
+  // 위 게시물의 created_at 시간보다 1초 더 최신으로 설정
+  const aboveTime = new Date(posts[idx-1].created_at);
+  aboveTime.setSeconds(aboveTime.getSeconds() + 1);
+  await updatePost_sb(id, {created_at: aboveTime.toISOString()});
   await renderBoard(tab);
   await renderAdminPostList(tab);
   showToast('한 칸 위로 이동했습니다 ↑');
