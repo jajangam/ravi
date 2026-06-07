@@ -70,6 +70,9 @@ body{display:flex;flex-direction:column;max-width:480px;margin:0 auto}
 /* PAGES */
 .pages{flex:1;overflow:hidden;position:relative;width:100%;overflow-x:hidden}
 .page{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;background:var(--bg);width:100%;overflow-x:hidden;box-sizing:border-box}
+.page::-webkit-scrollbar{width:4px}
+.page::-webkit-scrollbar-thumb{background:var(--golddim);border-radius:2px}
+.page::-webkit-scrollbar-track{background:var(--bg2)}
 .page.active{display:block}
 #p0.active{display:flex;flex-direction:column}
 
@@ -949,11 +952,18 @@ async function movePostUp(id, tab) {
   if(idx <= 0) { showToast('이미 맨 위예요!'); return; }
   const above = posts[idx-1];
   const current = posts[idx];
-  // sort_order를 인덱스 기반으로 재설정
-  const newAboveOrder = idx;
-  const newCurrentOrder = idx - 1;
-  await updatePost_sb(above.id, {sort_order: newAboveOrder});
-  await updatePost_sb(current.id, {sort_order: newCurrentOrder});
+  // 실제 sort_order 값이 같으면 인덱스로 강제 설정
+  const aOrder = above.sort_order !== null ? above.sort_order : idx-1;
+  const cOrder = current.sort_order !== null ? current.sort_order : idx;
+  if(aOrder === cOrder) {
+    // 전체 순서 재설정
+    const updates = posts.map((p,i) => updatePost_sb(p.id, {sort_order: i*10}));
+    await Promise.all(updates);
+    await updatePost_sb(current.id, {sort_order: (idx-1)*10 - 1});
+  } else {
+    await updatePost_sb(above.id, {sort_order: cOrder});
+    await updatePost_sb(current.id, {sort_order: aOrder});
+  }
   await renderBoard(tab);
   await renderAdminPostList(tab);
   showToast('한 칸 위로 이동했습니다 ↑');
