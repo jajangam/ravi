@@ -218,7 +218,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .adm-hdr{background:var(--bg2);border-bottom:1px solid var(--border2);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .adm-title{font-family:'Noto Serif KR',serif;font-size:16px;color:var(--gold2);letter-spacing:2px}
 .adm-close{background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer}
-.adm-body{flex:1;overflow-y:auto;padding:16px}
+.adm-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:thin;scrollbar-color:var(--golddim) var(--bg2)}
+.adm-body::-webkit-scrollbar{width:5px}
+.adm-body::-webkit-scrollbar-thumb{background:var(--golddim);border-radius:3px}
+.adm-body::-webkit-scrollbar-track{background:var(--bg2)}
 .adm-section{background:var(--bg2);border:1px solid var(--border);border-radius:14px;margin-bottom:14px;overflow:hidden}
 .adm-sec-title{padding:12px 16px;font-size:13px;font-weight:500;color:var(--gold2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;cursor:pointer;justify-content:space-between}
 .adm-sec-body{padding:12px 16px;display:none}
@@ -256,12 +259,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 .edit-cancel-btn{padding:12px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text3);font-size:13px;cursor:pointer}
 .adm-pw-row{display:flex;gap:8px;align-items:flex-end}
 .adm-pw-btn{padding:9px 14px;background:var(--golddim);border:1px solid var(--gold);border-radius:8px;color:var(--gold3);font-size:12px;cursor:pointer;white-space:nowrap}
-
-/* 관리자 패널 스크롤 */
-.adm-body{scrollbar-width:thin;scrollbar-color:var(--golddim) var(--bg2)}
-.adm-body::-webkit-scrollbar{width:5px}
-.adm-body::-webkit-scrollbar-thumb{background:var(--golddim);border-radius:3px}
-.adm-body::-webkit-scrollbar-track{background:var(--bg2)}
 
 /* 관리자 맨위로 버튼 */
 .adm-scroll-top{position:fixed;bottom:20px;right:16px;width:42px;height:42px;background:var(--golddim);border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--gold3);cursor:pointer;z-index:3100;box-shadow:0 2px 12px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .25s}
@@ -776,7 +773,7 @@ async function sbFetch(path, options={}) {
 
 // 게시물 불러오기
 async function loadPosts(tab) {
-  const data = await sbFetch(`posts?tab=eq.${tab}&order=created_at.desc`);
+  const data = await sbFetch(`posts?tab=eq.${tab}&order=sort_order.asc,created_at.desc`);
   return data || [];
 }
 
@@ -966,17 +963,26 @@ function togglePostYt(thumbEl, ytid) {
 // 한 칸씩 위로
 async function movePostUp(id, tab) {
   const posts = await loadPosts(tab);
-  // sort_order 오름차순 정렬 (낮을수록 위)
-  const sorted = posts.slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  // sort_order 기준 정렬, null이면 index로 보정
+  const sorted = posts.slice().sort((a,b)=>{
+    const ao = a.sort_order ?? 9999;
+    const bo = b.sort_order ?? 9999;
+    return ao - bo;
+  });
+  // sort_order가 없거나 중복인 경우 일괄 재설정
+  const needsReset = sorted.some((p,i) => p.sort_order == null || sorted.filter(x=>x.sort_order===p.sort_order).length > 1);
+  if(needsReset) {
+    for(let i=0;i<sorted.length;i++){
+      await updatePost_sb(sorted[i].id, {sort_order: i});
+      sorted[i].sort_order = i;
+    }
+  }
   const idx = sorted.findIndex(p => p.id === id);
   if(idx <= 0) { showToast('이미 맨 위예요!'); return; }
   const cur = sorted[idx];
   const above = sorted[idx-1];
-  // sort_order 서로 교환
-  const curOrder = cur.sort_order ?? idx;
-  const aboveOrder = above.sort_order ?? (idx-1);
-  await updatePost_sb(cur.id, {sort_order: aboveOrder});
-  await updatePost_sb(above.id, {sort_order: curOrder});
+  await updatePost_sb(cur.id, {sort_order: above.sort_order});
+  await updatePost_sb(above.id, {sort_order: cur.sort_order});
   await renderBoard(tab);
   await renderAdminPostList(tab);
   showToast('한 칸 위로 이동했습니다 ↑');
@@ -1205,6 +1211,8 @@ function openAdmin(){
   const firstBoard = document.querySelector('[data-board="1"]');
   if(firstBoard) firstBoard.classList.add('sel');
   renderAdminPostList(1);
+  // 패널이 열린 후 스크롤 이벤트 연결
+  setupAdmScrollTop();
 }
 function closeAdmin(){
   window._adminOpen=false;
@@ -1221,6 +1229,8 @@ function setupAdmScrollTop() {
   const body = document.getElementById('admBody');
   const btn = document.getElementById('admScrollTop');
   if(!body||!btn) return;
+  if(body._scrollBound) return; // 중복 방지
+  body._scrollBound = true;
   body.addEventListener('scroll', () => {
     btn.classList.toggle('show', body.scrollTop > 60);
   });
